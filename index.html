@@ -1,0 +1,525 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=yes">
+    <title>NEOVA Bank | Neo-Bank Platform with Animations</title>
+    <!-- Tailwind CSS + Font Awesome + Google Fonts -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css">
+    <link href="https://fonts.googleapis.com/css2?family=Inter:opsz,wght@14..32,300;400;500;600;700&display=swap" rel="stylesheet">
+    <!-- React & ReactDOM & Babel -->
+    <script src="https://cdn.jsdelivr.net/npm/react@18.2.0/umd/react.development.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/react-dom@18.2.0/umd/react-dom.development.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/babel-standalone@6.26.0/babel.min.js"></script>
+    <style>
+        * { font-family: 'Inter', sans-serif; }
+        body { background: #f8fafc; }
+        
+        /* Base card styles with transition */
+        .glass-card {
+            background: white;
+            border-radius: 1.75rem;
+            box-shadow: 0 8px 30px rgba(0,0,0,0.04);
+            transition: all 0.25s cubic-bezier(0.2, 0, 0, 1);
+            border: 1px solid rgba(0,0,0,0.03);
+        }
+        
+        /* Hover effect for cards */
+        .glass-card:hover {
+            transform: translateY(-4px);
+            box-shadow: 0 20px 35px -12px rgba(0, 0, 0, 0.12);
+            border-color: rgba(15, 23, 42, 0.1);
+        }
+        
+        /* Sidebar item animations */
+        .sidebar-item {
+            transition: all 0.2s ease;
+            cursor: pointer;
+            border-radius: 1rem;
+            position: relative;
+        }
+        .sidebar-item:hover {
+            background: #f1f5f9;
+            transform: translateX(6px);
+        }
+        .sidebar-active {
+            background: #0f172a;
+            color: white;
+            box-shadow: 0 8px 16px -8px rgba(0,0,0,0.15);
+            transform: translateX(0);
+        }
+        .sidebar-active:hover {
+            background: #1e293b;
+            transform: translateX(2px);
+        }
+        
+        /* Buttons */
+        .btn-primary {
+            background: #0f172a;
+            transition: all 0.2s ease;
+            position: relative;
+            overflow: hidden;
+        }
+        .btn-primary:hover {
+            background: #1e293b;
+            transform: translateY(-2px);
+            box-shadow: 0 10px 20px -5px rgba(0,0,0,0.2);
+        }
+        .btn-primary:active {
+            transform: translateY(1px);
+        }
+        
+        /* Progress bar fill animation */
+        .progress-fill {
+            transition: width 0.6s cubic-bezier(0.22, 0.97, 0.36, 1.02);
+        }
+        
+        /* Transaction items hover */
+        .transaction-item {
+            transition: all 0.15s ease;
+        }
+        .transaction-item:hover {
+            background: #f1f5f9;
+            transform: scale(1.01);
+            padding-left: 0.75rem;
+        }
+        
+        /* Fade-in animation for page content */
+        .page-transition {
+            animation: fadeSlideUp 0.3s ease-out;
+        }
+        @keyframes fadeSlideUp {
+            from {
+                opacity: 0;
+                transform: translateY(12px);
+            }
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+        
+        /* Input focus ring animation */
+        input:focus, select:focus {
+            outline: none;
+            border-color: #0f172a;
+            box-shadow: 0 0 0 3px rgba(15, 23, 42, 0.1);
+            transform: scale(1.01);
+        }
+        
+        /* Modal animation */
+        .modal-animate {
+            animation: modalPop 0.2s cubic-bezier(0.34, 1.2, 0.64, 1);
+        }
+        @keyframes modalPop {
+            from {
+                opacity: 0;
+                transform: scale(0.95);
+            }
+            to {
+                opacity: 1;
+                transform: scale(1);
+            }
+        }
+        
+        /* Role badge animation on change */
+        .role-badge {
+            transition: all 0.2s;
+        }
+        
+        /* Icon hover spin */
+        .hover-spin:hover i {
+            transform: rotate(15deg);
+            transition: transform 0.2s;
+        }
+        
+        /* Chart donut subtle animation */
+        .donut-svg path {
+            transition: opacity 0.2s;
+        }
+        .donut-svg path:hover {
+            opacity: 0.85;
+            cursor: pointer;
+        }
+        
+        /* Loan result card animation */
+        .result-appear {
+            animation: fadeSlideUp 0.25s ease-out;
+        }
+    </style>
+</head>
+<body>
+<div id="root"></div>
+
+<script type="text/babel">
+    const { useState, useEffect, useReducer } = React;
+
+    // ---------- MOCK DATA ----------
+    const initialTransactions = [
+        { id: 't1', date: '2026-04-15', description: 'Whole Foods Market', amount: -84.50, category: 'Groceries' },
+        { id: 't2', date: '2026-04-14', description: 'Netflix', amount: -15.99, category: 'Bills' },
+        { id: 't3', date: '2026-04-12', description: 'Starbucks', amount: -6.75, category: 'Dining' },
+        { id: 't4', date: '2026-04-10', description: 'Uber Eats', amount: -32.40, category: 'Dining' },
+        { id: 't5', date: '2026-04-08', description: 'Zara', amount: -120.00, category: 'Shopping' },
+        { id: 't6', date: '2026-04-05', description: 'Salary Deposit', amount: 4250.00, category: 'Income' },
+        { id: 't7', date: '2026-04-02', description: 'Electric Bill', amount: -95.30, category: 'Bills' },
+        { id: 't8', date: '2026-03-28', description: 'Concert', amount: -145.00, category: 'Entertainment' },
+    ];
+
+    const initialBudgets = [
+        { category: 'Groceries', limit: 500, spent: 84.50 },
+        { category: 'Dining', limit: 300, spent: 39.15 },
+        { category: 'Shopping', limit: 400, spent: 120 },
+        { category: 'Bills', limit: 450, spent: 111.29 },
+        { category: 'Entertainment', limit: 200, spent: 145 }
+    ];
+
+    const initialSavingsGoals = [
+        { id: 'sg1', name: '🏝️ Bali Trip', target: 3000, saved: 1250 },
+        { id: 'sg2', name: '💻 MacBook Pro', target: 2500, saved: 800 }
+    ];
+
+    const trustedRecipients = ['Alice Chen', 'Michael Rivera', 'Mom', 'Dad', 'Sophia', 'Olivia'];
+
+    // Fraud detection logic
+    const evaluateFraudRisk = (amount, recipient, userRole) => {
+        let riskLevel = 'low';
+        let reasons = [];
+        if (amount > 1500) { riskLevel = 'high'; reasons.push('Amount exceeds $1,500 risk threshold'); }
+        else if (amount > 800) { riskLevel = 'medium'; reasons.push('High-value transaction > $800'); }
+        if (recipient && !trustedRecipients.some(r => recipient.toLowerCase().includes(r.toLowerCase()))) {
+            reasons.push('Recipient not in your trusted contacts list');
+            if (riskLevel === 'low') riskLevel = 'medium';
+            if (amount > 500) riskLevel = 'high';
+        }
+        if (userRole === 'viewer') return { riskLevel: 'blocked', reasons: ['Viewer role cannot send money'] };
+        return { riskLevel, reasons };
+    };
+
+    // ---------- REDUCER ----------
+    const appReducer = (state, action) => {
+        switch (action.type) {
+            case 'SET_ROLE': return { ...state, userRole: action.payload };
+            case 'SEND_MONEY': {
+                const { amount, recipient, category, description } = action.payload;
+                if (state.accounts.checking < amount) return state;
+                const newTransaction = {
+                    id: Date.now().toString(),
+                    date: new Date().toISOString().slice(0,10),
+                    description: description || `Transfer to ${recipient}`,
+                    amount: -amount,
+                    category: category || 'Transfer',
+                };
+                let updatedBudgets = [...state.budgets];
+                if (category) {
+                    const idx = updatedBudgets.findIndex(b => b.category === category);
+                    if (idx !== -1) updatedBudgets[idx].spent += amount;
+                }
+                return {
+                    ...state,
+                    accounts: { ...state.accounts, checking: state.accounts.checking - amount },
+                    transactions: [newTransaction, ...state.transactions],
+                    budgets: updatedBudgets,
+                };
+            }
+            case 'RECEIVE_MONEY': {
+                const { amount, from } = action.payload;
+                const newTransaction = {
+                    id: Date.now().toString(),
+                    date: new Date().toISOString().slice(0,10),
+                    description: `Received from ${from || 'External'}`,
+                    amount: amount,
+                    category: 'Income',
+                };
+                return {
+                    ...state,
+                    accounts: { ...state.accounts, checking: state.accounts.checking + amount },
+                    transactions: [newTransaction, ...state.transactions],
+                };
+            }
+            case 'UPDATE_BUDGET_LIMIT': {
+                const { category, newLimit } = action.payload;
+                const updated = state.budgets.map(b => b.category === category ? { ...b, limit: newLimit } : b);
+                return { ...state, budgets: updated };
+            }
+            case 'ADD_SAVINGS': {
+                const { goalId, amount } = action.payload;
+                if (state.accounts.savings < amount) return state;
+                const updatedGoals = state.savingsGoals.map(g => 
+                    g.id === goalId ? { ...g, saved: Math.min(g.saved + amount, g.target) } : g
+                );
+                return {
+                    ...state,
+                    accounts: { ...state.accounts, savings: state.accounts.savings - amount },
+                    savingsGoals: updatedGoals,
+                };
+            }
+            case 'CREATE_SAVINGS_GOAL': {
+                const newGoal = { id: Date.now().toString(), ...action.payload, saved: 0 };
+                return { ...state, savingsGoals: [...state.savingsGoals, newGoal] };
+            }
+            case 'DELETE_GOAL': {
+                return { ...state, savingsGoals: state.savingsGoals.filter(g => g.id !== action.payload) };
+            }
+            case 'ADD_FRAUD_ALERT': {
+                return { ...state, fraudAlerts: [action.payload, ...state.fraudAlerts].slice(0, 6) };
+            }
+            default: return state;
+        }
+    };
+
+    const computeSpendingInsights = (transactions, budgets, accounts) => {
+        const now = new Date();
+        const currentMonth = now.getMonth();
+        const currentYear = now.getFullYear();
+        const monthlyExpenses = transactions.filter(t => {
+            const d = new Date(t.date);
+            return d.getMonth() === currentMonth && d.getFullYear() === currentYear && t.amount < 0;
+        });
+        const totalSpent = monthlyExpenses.reduce((s, t) => s + Math.abs(t.amount), 0);
+        const categoryTotals = {};
+        monthlyExpenses.forEach(t => { categoryTotals[t.category] = (categoryTotals[t.category] || 0) + Math.abs(t.amount); });
+        const insights = [];
+        if (totalSpent > 2800) insights.push(`📊 This month's spending ($${totalSpent.toFixed(2)}) is 15% above average — review subscriptions.`);
+        else if (totalSpent < 1500) insights.push(`✨ Great discipline! Spending is $${totalSpent.toFixed(2)} this month.`);
+        for (let budget of budgets) {
+            const spent = categoryTotals[budget.category] || 0;
+            if (spent > budget.limit * 0.9 && spent <= budget.limit) insights.push(`⚠️ ${budget.category} at ${Math.round((spent/budget.limit)*100)}% of limit.`);
+            if (spent > budget.limit) insights.push(`🔴 Overspent on ${budget.category} by $${(spent - budget.limit).toFixed(2)}.`);
+        }
+        if (categoryTotals['Dining'] && categoryTotals['Dining'] > 180) insights.push(`🍽️ AI insight: Dining out high ($${categoryTotals['Dining'].toFixed(2)}). Try cooking at home.`);
+        if (accounts.savings > 10000) insights.push(`🏦 High savings! Consider an investment account for growth.`);
+        if (insights.length === 0) insights.push(`🧠 Spending patterns are stable. Keep saving!`);
+        return insights.slice(0, 4);
+    };
+
+    // ---------- COMPONENTS ----------
+    const Sidebar = ({ activeTab, setActiveTab, role }) => {
+        const items = [
+            { id: 'dashboard', label: 'Dashboard', icon: 'fas fa-home' },
+            { id: 'accounts', label: 'Send & Receive', icon: 'fas fa-exchange-alt' },
+            { id: 'budget', label: 'Budgeting', icon: 'fas fa-chart-line' },
+            { id: 'savings', label: 'Savings Goals', icon: 'fas fa-piggy-bank' },
+            { id: 'loan', label: 'Loan Simulator', icon: 'fas fa-hand-holding-usd' },
+            { id: 'insights', label: 'AI & Fraud', icon: 'fas fa-shield-alt' }
+        ];
+        return (
+            <div className="fixed md:relative w-64 h-full bg-white/90 backdrop-blur-sm border-r border-gray-100 z-20 p-5 flex flex-col shadow-xl transition-all duration-300">
+                <div className="flex items-center gap-2 mb-8 px-2 hover-spin">
+                    <i className="fas fa-bank text-2xl text-gray-800 transition-transform duration-200"></i>
+                    <span className="font-bold text-xl tracking-tight">NEOVA<span className="text-gray-500"> Bank</span></span>
+                </div>
+                <div className="flex-1 space-y-1.5">
+                    {items.map(item => (
+                        <div key={item.id} onClick={() => setActiveTab(item.id)} className={`sidebar-item flex items-center gap-3 px-4 py-3 text-sm font-medium ${activeTab === item.id ? 'sidebar-active bg-gray-900 text-white' : 'text-gray-700 hover:bg-gray-100'}`}>
+                            <i className={`${item.icon} w-5 transition-transform duration-200`}></i>
+                            <span>{item.label}</span>
+                        </div>
+                    ))}
+                </div>
+                <div className="mt-6 pt-4 border-t border-gray-200">
+                    <div className="text-xs text-gray-400 mb-2">Access role</div>
+                    <div className="bg-gray-100 rounded-xl p-1 flex text-xs font-semibold">
+                        {['owner', 'manager', 'viewer'].map(r => (
+                            <span key={r} className={`role-badge px-3 py-1 rounded-full transition-all duration-200 ${role === r ? 'bg-gray-900 text-white shadow-sm' : 'text-gray-600 hover:bg-gray-200'}`}>{r === 'owner' ? '👑 Owner' : r === 'manager' ? '📋 Manager' : '👁️ Viewer'}</span>
+                        ))}
+                    </div>
+                </div>
+            </div>
+        );
+    };
+
+    const FraudModal = ({ isOpen, onClose, onConfirm, risk, reasons, amount }) => {
+        if (!isOpen) return null;
+        return (
+            <div className="fixed inset-0 flex items-center justify-center z-50 modal-overlay" style={{background: 'rgba(0,0,0,0.6)', backdropFilter: 'blur(4px)'}}>
+                <div className="bg-white rounded-2xl p-6 max-w-md w-full shadow-2xl modal-animate">
+                    <div className="flex items-center gap-3 text-red-600 mb-3"><i className="fas fa-exclamation-triangle text-2xl animate-pulse"></i><h3 className="text-xl font-bold">Fraud Detection Alert</h3></div>
+                    <p className="text-gray-700">Transaction of <span className="font-bold">${amount.toFixed(2)}</span> flagged as <span className="font-bold uppercase">{risk}</span> risk.</p>
+                    <ul className="list-disc pl-5 my-3 text-sm text-gray-600">{reasons.map((r,i)=><li key={i}>{r}</li>)}</ul>
+                    <p className="text-sm bg-yellow-50 p-2 rounded-lg">⚠️ Only confirm if you trust the recipient.</p>
+                    <div className="flex gap-3 mt-5">
+                        <button onClick={onConfirm} className="flex-1 bg-red-600 text-white py-2 rounded-xl hover:bg-red-700 transition-all hover:scale-105 active:scale-95">Confirm Anyway</button>
+                        <button onClick={onClose} className="flex-1 border border-gray-300 rounded-xl py-2 hover:bg-gray-50 transition-all hover:scale-105">Cancel</button>
+                    </div>
+                </div>
+            </div>
+        );
+    };
+
+    // Simple chart component (pure SVG donut) with hover segments
+    const DonutChart = ({ data }) => {
+        const total = data.reduce((s, d) => s + d.value, 0);
+        let cumulative = 0;
+        const colors = ['#0f172a', '#334155', '#475569', '#64748b', '#94a3b8'];
+        return (
+            <svg width="180" height="180" viewBox="0 0 40 40" className="mx-auto donut-svg">
+                {data.map((item, idx) => {
+                    const angle = (item.value / total) * 360;
+                    const startAngle = cumulative;
+                    const endAngle = cumulative + angle;
+                    cumulative += angle;
+                    const x1 = 20 + 16 * Math.cos((startAngle - 90) * Math.PI / 180);
+                    const y1 = 20 + 16 * Math.sin((startAngle - 90) * Math.PI / 180);
+                    const x2 = 20 + 16 * Math.cos((endAngle - 90) * Math.PI / 180);
+                    const y2 = 20 + 16 * Math.sin((endAngle - 90) * Math.PI / 180);
+                    const large = angle > 180 ? 1 : 0;
+                    if (angle === 0) return null;
+                    return <path key={idx} d={`M 20 20 L ${x1} ${y1} A 16 16 0 ${large} 1 ${x2} ${y2} Z`} fill={colors[idx % colors.length]} stroke="white" strokeWidth="0.8" style={{transition: 'opacity 0.2s', cursor: 'pointer'}} />;
+                })}
+                <circle cx="20" cy="20" r="8" fill="white" />
+            </svg>
+        );
+    };
+
+    const App = () => {
+        const [state, dispatch] = useReducer(appReducer, {
+            accounts: { checking: 5280.42, savings: 12450.00 },
+            transactions: initialTransactions,
+            budgets: initialBudgets,
+            savingsGoals: initialSavingsGoals,
+            fraudAlerts: [],
+            userRole: 'owner',
+        });
+        const [activeTab, setActiveTab] = useState('dashboard');
+        const [fraudModal, setFraudModal] = useState(null);
+        const [pendingSend, setPendingSend] = useState(null);
+        const [loanParams, setLoanParams] = useState({ amount: 10000, rate: 5.5, term: 12 });
+        const [loanResult, setLoanResult] = useState(null);
+
+        const spendingInsights = computeSpendingInsights(state.transactions, state.budgets, state.accounts);
+
+        const handleSend = (amount, recipient, category, description) => {
+            if (state.userRole === 'viewer') { alert("Viewer role cannot send money"); return false; }
+            const { riskLevel, reasons } = evaluateFraudRisk(amount, recipient, state.userRole);
+            if (riskLevel === 'blocked') { alert("⛔ Transaction blocked due to role restrictions"); return false; }
+            if (riskLevel !== 'low') {
+                setFraudModal({ risk: riskLevel, reasons, amount, recipient, category, description });
+                setPendingSend({ amount, recipient, category, description });
+                return false;
+            }
+            executeSend({ amount, recipient, category, description });
+            return true;
+        };
+
+        const executeSend = (data) => {
+            if (state.accounts.checking < data.amount) { alert("Insufficient balance"); return; }
+            dispatch({ type: 'SEND_MONEY', payload: data });
+            if (fraudModal) {
+                dispatch({ type: 'ADD_FRAUD_ALERT', payload: { id: Date.now(), msg: `⚠️ High-risk transaction $${data.amount} to ${data.recipient} was manually approved.`, date: new Date().toLocaleTimeString() } });
+            }
+            setFraudModal(null);
+            setPendingSend(null);
+        };
+
+        const handleReceive = (amount, from) => {
+            if (amount <= 0) return;
+            dispatch({ type: 'RECEIVE_MONEY', payload: { amount, from } });
+        };
+
+        const updateBudget = (category, newLimit) => dispatch({ type: 'UPDATE_BUDGET_LIMIT', payload: { category, newLimit } });
+        const addToGoal = (goalId, amount) => { if (state.accounts.savings >= amount) dispatch({ type: 'ADD_SAVINGS', payload: { goalId, amount } }); else alert("Insufficient savings balance"); };
+        const createGoal = (name, target) => dispatch({ type: 'CREATE_SAVINGS_GOAL', payload: { name, target } });
+        const deleteGoal = (id) => dispatch({ type: 'DELETE_GOAL', payload: id });
+
+        const computeLoan = () => {
+            const P = loanParams.amount;
+            const r = loanParams.rate / 100 / 12;
+            const n = loanParams.term;
+            const monthly = P * r * Math.pow(1+r, n) / (Math.pow(1+r, n) - 1);
+            const total = monthly * n;
+            const interest = total - P;
+            setLoanResult({ monthly: monthly.toFixed(2), total: total.toFixed(2), interest: interest.toFixed(2) });
+        };
+
+        const categoryData = () => {
+            const currMonth = new Date().getMonth();
+            const expenses = state.transactions.filter(t => new Date(t.date).getMonth() === currMonth && t.amount < 0);
+            const map = {};
+            expenses.forEach(e => { map[e.category] = (map[e.category] || 0) + Math.abs(e.amount); });
+            return Object.entries(map).map(([name, value]) => ({ name, value }));
+        };
+
+        // Page wrapper with animation key
+        const PageWrapper = ({ children }) => (
+            <div className="page-transition">{children}</div>
+        );
+
+        return (
+            <div className="flex flex-col md:flex-row min-h-screen bg-gray-50">
+                <Sidebar activeTab={activeTab} setActiveTab={setActiveTab} role={state.userRole} />
+                <div className="flex-1 p-5 md:p-8 overflow-auto">
+                    {/* Role switcher with animation */}
+                    <div className="flex justify-end items-center gap-3 mb-6">
+                        <span className="text-sm text-gray-500"><i className="fas fa-user-tag"></i> Role:</span>
+                        <select value={state.userRole} onChange={(e) => dispatch({ type: 'SET_ROLE', payload: e.target.value })} className="border rounded-full px-4 py-1.5 text-sm bg-white shadow-sm transition-all hover:shadow-md focus:ring-2 focus:ring-gray-300">
+                            <option value="owner">👑 Owner (Full)</option>
+                            <option value="manager">📋 Manager (Send/Edit)</option>
+                            <option value="viewer">👁️ Viewer (Read only)</option>
+                        </select>
+                    </div>
+
+                    {activeTab === 'dashboard' && (
+                        <PageWrapper>
+                            <div className="space-y-6">
+                                <h1 className="text-3xl font-bold gradient-text animate-fade-in">Welcome back, Olivia</h1>
+                                <div className="grid md:grid-cols-2 gap-6">
+                                    <div className="glass-card p-6 hover:shadow-xl transition-all duration-300"><i className="fas fa-wallet text-2xl text-gray-700"></i><h2 className="text-lg font-semibold mt-2">Checking</h2><p className="text-3xl font-bold">${state.accounts.checking.toFixed(2)}</p></div>
+                                    <div className="glass-card p-6 hover:shadow-xl transition-all duration-300"><i className="fas fa-coins text-2xl text-gray-700"></i><h2 className="text-lg font-semibold mt-2">Savings</h2><p className="text-3xl font-bold">${state.accounts.savings.toFixed(2)}</p></div>
+                                </div>
+                                <div className="glass-card p-5 rounded-2xl"><h3 className="font-bold mb-3">📊 Monthly Spending by Category</h3><div className="flex flex-wrap items-center gap-4"><DonutChart data={categoryData()} /><div className="text-sm space-y-1">{categoryData().slice(0,4).map(c=><div key={c.name} className="flex items-center gap-2"><span className="inline-block w-3 h-3 rounded-full bg-gray-800 transition-transform hover:scale-110"></span>{c.name}: ${c.value.toFixed(2)}</div>)}</div></div></div>
+                                <div className="grid md:grid-cols-2 gap-5">
+                                    <div className="glass-card p-5"><h3 className="font-bold">🧠 AI Insights</h3><div className="mt-2 space-y-2">{spendingInsights.map((ins,i)=><div key={i} className="insight-card text-sm transition-all hover:translate-x-1 hover:shadow-sm">{ins}</div>)}</div></div>
+                                    <div className="glass-card p-5"><h3 className="font-bold">⚠️ Fraud Alerts</h3>{state.fraudAlerts.length===0?<p className="text-sm text-gray-400">No recent alerts</p>:state.fraudAlerts.slice(0,2).map(a=><div className="bg-red-50 p-2 rounded-lg text-xs mt-2 transition-all hover:bg-red-100"><i className="fas fa-shield-alt text-red-600"></i> {a.msg}</div>)}</div>
+                                </div>
+                            </div>
+                        </PageWrapper>
+                    )}
+
+                    {activeTab === 'accounts' && (
+                        <PageWrapper>
+                            <div className="space-y-6">
+                                <h2 className="text-2xl font-bold">💸 Send & Receive</h2>
+                                <div className="grid md:grid-cols-2 gap-6">
+                                    <div className="glass-card p-6"><h3 className="font-bold text-xl mb-3"><i className="fas fa-paper-plane"></i> Send</h3><form onSubmit={(e)=>{e.preventDefault(); const fd=new FormData(e.target); handleSend(parseFloat(fd.get('amount')), fd.get('recipient'), fd.get('category'), fd.get('description')); e.target.reset();}}><input name="recipient" placeholder="Recipient name" className="w-full mb-2 transition-all" required/><input name="amount" type="number" step="0.01" placeholder="Amount" className="w-full mb-2 transition-all" required/><select name="category" className="w-full mb-2 transition-all"><option>Groceries</option><option>Dining</option><option>Shopping</option><option>Bills</option><option>Entertainment</option></select><input name="description" placeholder="Optional note" className="w-full mb-3 transition-all"/><button type="submit" disabled={state.userRole==='viewer'} className="btn-primary text-white w-full py-2 rounded-xl transition-all">Send Payment</button></form></div>
+                                    <div className="glass-card p-6"><h3 className="font-bold text-xl mb-3"><i className="fas fa-download"></i> Receive</h3><form onSubmit={(e)=>{e.preventDefault(); const fd=new FormData(e.target); handleReceive(parseFloat(fd.get('amount')), fd.get('from')); e.target.reset();}}><input name="from" placeholder="From (name)" className="w-full mb-2 transition-all"/><input name="amount" type="number" step="0.01" placeholder="Amount" className="w-full mb-3 transition-all"/><button type="submit" className="bg-green-700 text-white w-full py-2 rounded-xl transition-all hover:bg-green-800 hover:scale-105 active:scale-95">Add Funds</button></form></div>
+                                </div>
+                                <div className="glass-card p-5"><h3 className="font-bold">📜 Recent Activity</h3><div className="space-y-2 mt-3 max-h-64 overflow-y-auto">{state.transactions.slice(0,6).map(tx=><div key={tx.id} className="flex justify-between border-b py-2 transaction-item px-2 rounded transition-all"><div><p className="font-medium">{tx.description}</p><p className="text-xs text-gray-400">{tx.date} · {tx.category}</p></div><span className={`font-semibold ${tx.amount>0?'text-green-600':'text-red-600'}`}>{tx.amount>0?`+$${tx.amount.toFixed(2)}`:`-$${Math.abs(tx.amount).toFixed(2)}`}</span></div>)}</div></div>
+                            </div>
+                        </PageWrapper>
+                    )}
+
+                    {activeTab === 'budget' && (
+                        <PageWrapper>
+                            <div><h2 className="text-2xl font-bold mb-4">📋 Budgeting Tools</h2><div className="space-y-4">{state.budgets.map(b=>{const percent = (b.spent/b.limit)*100; return <div key={b.category} className="glass-card p-5 transition-all"><div className="flex justify-between"><span className="font-semibold">{b.category}</span><span>${b.spent.toFixed(2)} / ${b.limit.toFixed(2)}</span></div><div className="progress-bar-bg mt-2"><div className="progress-fill" style={{width:`${Math.min(percent,100)}%`, background: percent>90?'#dc2626':'#0f172a'}}></div></div>{state.userRole!=='viewer' && <div className="mt-2"><input type="number" placeholder="New limit" className="w-28 text-sm p-1 transition-all" onBlur={(e)=>updateBudget(b.category, parseFloat(e.target.value))}/></div>}</div>})}</div></div>
+                        </PageWrapper>
+                    )}
+
+                    {activeTab === 'savings' && (
+                        <PageWrapper>
+                            <div><h2 className="text-2xl font-bold mb-4">🎯 Savings Goals</h2><div className="grid md:grid-cols-2 gap-5">{state.savingsGoals.map(g=>{const progress = (g.saved/g.target)*100; return <div key={g.id} className="glass-card p-5 transition-all"><h3 className="font-bold text-lg">{g.name}</h3><div className="progress-bar-bg my-2"><div className="progress-fill" style={{width:`${progress}%`}}></div></div><p>${g.saved.toFixed(2)} of ${g.target.toFixed(2)}</p>{state.userRole!=='viewer' && <div className="flex gap-2 mt-3"><input type="number" placeholder="Add $" id={`add-${g.id}`} className="w-24 p-1 text-sm transition-all"/><button onClick={()=>{const val=parseFloat(document.getElementById(`add-${g.id}`).value); if(val) addToGoal(g.id,val)}} className="bg-black text-white px-3 py-1 rounded-lg text-sm transition-all hover:scale-105 active:scale-95">Contribute</button><button onClick={()=>deleteGoal(g.id)} className="text-red-500 transition-all hover:scale-110"><i className="fas fa-trash"></i></button></div>}</div>})}</div><div className="mt-6">{state.userRole!=='viewer' && <div className="glass-card p-5"><h3 className="font-bold">➕ New Goal</h3><form onSubmit={(e)=>{e.preventDefault(); const fd=new FormData(e.target); createGoal(fd.get('name'), parseFloat(fd.get('target'))); e.target.reset();}}><input name="name" placeholder="Goal name" className="w-full mb-2 transition-all"/><input name="target" type="number" placeholder="Target amount" className="w-full mb-2 transition-all"/><button type="submit" className="btn-primary text-white py-2 rounded-xl w-full transition-all">Create Goal</button></form></div>}</div></div>
+                        </PageWrapper>
+                    )}
+
+                    {activeTab === 'loan' && (
+                        <PageWrapper>
+                            <div className="glass-card p-6 max-w-xl transition-all"><h2 className="text-2xl font-bold">🏦 Loan Simulator</h2><div className="space-y-3 mt-4"><label>Loan Amount ($)</label><input type="number" value={loanParams.amount} onChange={e=>setLoanParams({...loanParams, amount: parseFloat(e.target.value)})} className="w-full transition-all"/><label>Annual Interest (%)</label><input type="number" step="0.1" value={loanParams.rate} onChange={e=>setLoanParams({...loanParams, rate: parseFloat(e.target.value)})} className="w-full transition-all"/><label>Term (months)</label><input type="number" value={loanParams.term} onChange={e=>setLoanParams({...loanParams, term: parseInt(e.target.value)})} className="w-full transition-all"/><button onClick={computeLoan} className="btn-primary text-white py-2 rounded-xl w-full transition-all">Calculate Payment</button>{loanResult && <div className="mt-4 p-4 bg-gray-100 rounded-xl result-appear"><p>📆 Monthly: <strong>${loanResult.monthly}</strong></p><p>💰 Total Interest: ${loanResult.interest}</p><p>🏦 Total Repayment: ${loanResult.total}</p></div>}</div></div>
+                        </PageWrapper>
+                    )}
+
+                    {activeTab === 'insights' && (
+                        <PageWrapper>
+                            <div className="space-y-5"><div className="glass-card p-6"><h2 className="text-2xl font-bold flex gap-2"><i className="fas fa-brain"></i> AI Spending Insights</h2><div className="mt-4 space-y-3">{spendingInsights.map((ins,i)=><div key={i} className="bg-indigo-50 p-4 rounded-xl border-l-4 border-indigo-800 transition-all hover:shadow-md hover:translate-x-1">{ins}</div>)}</div></div><div className="glass-card p-6"><h2 className="text-xl font-bold"><i className="fas fa-shield-alt"></i> Fraud Detection Log</h2>{state.fraudAlerts.length===0?<p className="text-gray-400">No suspicious activity yet</p>:state.fraudAlerts.map((a,i)=><div key={i} className="border-b py-2 text-sm transition-all hover:bg-gray-50"><i className="fas fa-flag-checkered text-red-500"></i> {a.msg} <span className="text-gray-400 text-xs">({a.date})</span></div>)}<div className="mt-3 text-xs text-gray-500">⚡ Rules: amount > $1500 or untrusted recipient triggers risk review.</div></div></div>
+                        </PageWrapper>
+                    )}
+                </div>
+                {fraudModal && <FraudModal isOpen={!!fraudModal} onClose={()=>setFraudModal(null)} onConfirm={()=>executeSend(pendingSend)} risk={fraudModal.risk} reasons={fraudModal.reasons} amount={fraudModal.amount} />}
+            </div>
+        );
+    };
+
+    ReactDOM.createRoot(document.getElementById("root")).render(<App />);
+</script>
+</body>
+</html>
